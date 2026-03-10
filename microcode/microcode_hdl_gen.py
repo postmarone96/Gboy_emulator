@@ -3,10 +3,11 @@ import csv
 
 def csv_to_vhdl(csv_file, vhdl_file):
     # Mapping for Registers and Address Selection
-    reg_map = {"REG_B": 0, "REG_C": 1, "REG_D": 2, "REG_E": 3, "REG_H": 4, "REG_L": 5, "REG_A": 7, "MEM_DATA": 8,
+    reg_map = {"REG_B": 0, "REG_C": 1, "REG_D": 2, "REG_E": 3, "REG_H": 4, "REG_L": 5, "REG_A": 7, "REG_MEM": 8,
                "TEMP_Z": 9, "TEMP_W": 10, "NONE": 15}
-    addr_map = {"PC": 0, "HL": 1, "BC": 2, "DE": 3, "WZ": 4, "FF00_C":5, "SP":6}
-
+    addr_map = {"PC": 0, "HL": 1, "BC": 2, "DE": 3, "WZ": 4, "FF00_C":5, "FF00_Z":6, "SP":7}
+    alu_map = {"NONE": 0, "A_FROM_Z": 1, "ADD": 2, "SUB": 3 , "REG_COPY":4}
+    idu_map = {"NONE": 0, "PC_INC": 1, "SP_INC": 2, "SP_DEC": 3}
     try:
         with open(csv_file, 'r') as f:
             reader = list(csv.DictReader(f))
@@ -22,9 +23,10 @@ def csv_to_vhdl(csv_file, vhdl_file):
         f.write("        addr_sel  : integer range 0 to 7;\n")
         f.write("        reg_dest  : integer range 0 to 15;\n")
         f.write("        reg_src   : integer range 0 to 15;\n")
+        f.write("        alu_op    : integer range 0 to 3;\n")
+        f.write("        idu_op    : integer range 0 to 3;\n")
         f.write("        mem_read  : std_logic;\n")
         f.write("        mem_write : std_logic;\n")
-        f.write("        pc_inc    : std_logic;\n")
         f.write("        is_done   : std_logic;\n")
         f.write("    end record;\n\n")
 
@@ -39,17 +41,18 @@ def csv_to_vhdl(csv_file, vhdl_file):
                 if (op, m) in rom_data:
                     r = rom_data[(op, m)]
                     addr = addr_map.get(r.get('Addr_Sel', 'PC'), 0)
-                    dest = reg_map.get(r['Reg_Dest'], 15)
-                    src = reg_map.get(r['Reg_Src'], 15)
+                    dest = reg_map.get(r.get('Reg_Dest', 'NONE'), 15)
+                    src  = reg_map.get(r.get('Reg_Src', 'NONE'), 15)
+                    alu  = alu_map.get(r.get('ALU_Op', 'NONE'), 0)
+                    idu  = idu_map.get(r.get('IDU_Op', 'NONE'), 0)
 
-                    # Fix: Comma now correctly placed AFTER the parenthesis
-                    line = f"({addr}, {dest}, {src}, '{r['Mem_Read']}', '{r['Mem_Write']}', '{r['PC_Inc']}', '{r['Is_Done']}')"
+                    line = f"({addr}, {dest}, {src}, {alu}, {idu}, '{r['Mem_Read']}', '{r['Mem_Write']}', '{r['Is_Done']}')"
                     label = f" -- {r['Label']}"
                 else:
-                    line = "(0, 15, 15, '0', '0', '0', '1')"
+                    # Default: NOP style (Fetch next, no ops)
+                    line = "(0, 15, 15, 0, 0, '0', '0', '1')"
                     label = ""
 
-                # Comma logic for array elements
                 terminator = "," if m < 4 else ""
                 f.write(f"            {m} => {line}{terminator}{label}\n")
 

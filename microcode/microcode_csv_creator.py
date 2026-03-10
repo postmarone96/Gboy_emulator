@@ -12,7 +12,19 @@ registers = {
     7: "A",
 }
 
-header_row = ["Opcode", "M_Cycle", "Label", "Addr_Sel", "Reg_Dest", "Reg_Src", "Mem_Read", "Mem_Write", "PC_Inc", "Is_Done"]
+header_row = [
+    "Opcode",     # e.g., 0xF0
+    "M_Cycle",    # 1, 2, 3
+    "Label",      # "LDH A, (n) (M3)"
+    "Addr_Sel",   # Mux for Address Bus: PC, FF00_Z, SP, HL
+    "Reg_Dest",   # Internal Latch Destination: REG_A, TEMP_Z, REG_MEM
+    "Reg_Src",    # Internal Latch Source: REG_A, TEMP_Z, REG_MEM
+    "ALU_Op",     # Math/Commit: NONE, A_FROM_Z, ADD, SUB
+    "IDU_Op",     # Pointer Math: NONE, PC_INC, SP_DEC, SP_INC
+    "Mem_Read",   # 1 or 0
+    "Mem_Write",  # 1 or 0
+    "Is_Done"     # 1 or 0
+]
 
 with open('microcode.csv', 'w', newline='') as f:
     writer = csv.writer(f)
@@ -57,6 +69,14 @@ with open('microcode.csv', 'w', newline='') as f:
     # LDH (C), A: Load from accumulator (indirect 0xFF00+C)
     generate_ldh_c_a(registers, writer)
 
-    
+    # LDH A, (n): Load accumulator (direct 0xFF00+n)
+    generate_ldh_a_n(registers, writer)
+
+    # LDH (n), A: Load from accumulator (direct 0xFF00+n)
+    generate_ldh_n_a(registers, writer)
+
+
+
+
 
 
