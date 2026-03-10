@@ -4,8 +4,8 @@ import csv
 def csv_to_vhdl(csv_file, vhdl_file):
     # Mapping for Registers and Address Selection
     reg_map = {"REG_B": 0, "REG_C": 1, "REG_D": 2, "REG_E": 3, "REG_H": 4, "REG_L": 5, "REG_A": 7, "MEM_DATA": 8,
-               "NONE": 15}
-    addr_map = {"PC": 0, "HL": 1, "BC": 2, "DE": 3, "IMM": 4}
+               "TEMP_Z": 9, "TEMP_W": 10, "NONE": 15}
+    addr_map = {"PC": 0, "HL": 1, "BC": 2, "DE": 3, "WZ": 4, "FF00_C":5, "SP":6}
 
     try:
         with open(csv_file, 'r') as f:
