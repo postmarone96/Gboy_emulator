@@ -1,5 +1,5 @@
 import csv
-from microcode_utils import generate_ld_r_r
+from microcode_utils import generate_ld_r_r, generate_ld_r_n
 
 # The standard 3-bit register mapping for SM83
 registers = {
@@ -10,10 +10,10 @@ registers = {
     4: "H",
     5: "L",
     6: "HL_MEM",  # (HL) points to memory, handled differently later
-    7: "A"
+    7: "A",
 }
 
-header_row = ["Opcode", "M_Cycle", "Label", "Reg_Dest", "Reg_Src", "Mem_Read", "Mem_Write", "PC_Inc", "Is_Done"]
+header_row = ["Opcode", "M_Cycle", "Label", "Addr_Sel", "Reg_Dest", "Reg_Src", "Mem_Read", "Mem_Write", "PC_Inc", "Is_Done"]
 
 with open('microcode.csv', 'w', newline='') as f:
     writer = csv.writer(f)
@@ -21,6 +21,9 @@ with open('microcode.csv', 'w', newline='') as f:
 
     # LD r, r’: Load register
     generate_ld_r_r(registers, writer)
+
+    # LD r, n: Load register (immediate)
+    generate_ld_r_n(registers, writer)
 
 
 
