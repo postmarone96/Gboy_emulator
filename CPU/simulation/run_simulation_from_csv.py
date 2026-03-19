@@ -65,5 +65,5 @@ def start_suite(csv_file):
 
 if __name__ == "__main__":
     print("=== SM83 Opcode Simulation Runner ===")
-    start_suite('../../microcode/microcode.csv')
+    start_suite('../microcode/microcode.csv')
     print("\nDone! Alle Waves under 'results/waveforms/'")

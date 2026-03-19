@@ -16,7 +16,7 @@ async def drive_cpu_with_csv(dut):
     target_op_hex = os.environ.get("TEST_OPCODE", "0x00")
 
     microcode_steps = []
-    with open('../../microcode/microcode.csv', 'r') as f:
+    with open('../microcode/microcode.csv', 'r') as f:
         reader = csv.DictReader(f)
         for row in reader:
             if row['Opcode'].lower() == target_op_hex.lower() or row['Opcode'].lower() == "0x00":
@@ -32,11 +32,19 @@ async def drive_cpu_with_csv(dut):
 
         # Ziel-Adressen
         0xADDE: 0x12,  # nn
-        0x0708: 0xFE,  # HL
+        0x0A01: 0xB1,  # AF
         0x0203: 0xBE,  # BC
         0x0405: 0xEF,  # DE
-        0xFF03: 0x11,  # IO-Bereich
-        0xFFDE: 0x99  # Stack-Bereich
+        0x0708: 0xFE,  # HL
+        0xFF03: 0x11,  # FF0C
+        0xFFDE: 0x99,  # FF0N
+
+        # Stack
+        0xFFFD: 0xA0,
+        0xFFFC: 0xA1,
+        0xFFFB: 0xA2, # Stack
+        0xFFFA: 0xA3,
+        0xFFF9: 0xA4,
     }
 
     # 1. Setup

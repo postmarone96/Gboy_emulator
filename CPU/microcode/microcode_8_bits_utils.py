@@ -76,7 +76,7 @@ def generate_ld_a_bc(writer):
     """
     Load to the 8-bit A register, data from the absolute address specified by the 16-bit register BC.
     """
-    opcode_hex = f"0x0A"
+    opcode_hex = "0x0A"
     writer.writerow([opcode_hex, 1, "LD A, BC M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
     writer.writerow([opcode_hex, 2, "LD A, BC M2", "BC", "REG_A", "REG_MEM", "NONE", "NONE", 1, 0, 1])
 
@@ -100,7 +100,7 @@ def generate_ld_de_a(writer):
     """
     Load to the absolute address specified by the 16-bit register DE, data from the 8-bit A register.
     """
-    opcode_hex = f"0x12"
+    opcode_hex = "0x12"
     writer.writerow([opcode_hex, 1, "LD DE, A M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
     writer.writerow([opcode_hex, 2, "LD DE, A M2", "DE", "REG_MEM", "REG_A", "NONE", "NONE", 0, 1, 1])
 
@@ -108,7 +108,7 @@ def generate_ld_a_nn(writer):
     """
     Load to the 8-bit A register, data from the absolute address specified by the 16-bit operand nn.    
     """
-    opcode_hex = f"0xFA"
+    opcode_hex = "0xFA"
     writer.writerow([opcode_hex, 1, "LD A, nn M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
     writer.writerow([opcode_hex, 2, "LD A, nn M2", "PC", "TEMP_Z", "REG_MEM", "NONE", "PC_INC", 1, 0, 0])
     writer.writerow([opcode_hex, 3, "LD A, nn M3", "PC", "TEMP_W", "REG_MEM", "NONE", "PC_INC", 1, 0, 0])
@@ -165,3 +165,40 @@ def generate_ldh_n_a(writer):
     writer.writerow([opcode_hex, 1, "LD n, A M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
     writer.writerow([opcode_hex, 2, "LD n, A M2", "PC", "TEMP_Z", "REG_MEM", "NONE", "PC_INC", 1, 0, 0])
     writer.writerow([opcode_hex, 3, "LD n, A M3", "FF00_Z", "REG_MEM", "REG_A", "NONE", "NONE", 0, 1, 1])
+
+def generate_ld_a_hl_minus(writer):
+    """
+    Load to the 8-bit A register, data from the absolute address specified by the 16-bit register HL.
+    The value of HL is decremented after the memory read.
+    """
+    opcode_hex = "0x3A"
+    writer.writerow([opcode_hex, 1, "LD A, HL- M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
+    writer.writerow([opcode_hex, 2, "LD A, HL- M2", "HL", "REG_A", "REG_MEM", "NONE", "HL_DEC", 1, 0, 1])
+
+def generate_ld_hl_minus_a(writer):
+    """
+    Load to the absolute address specified by the 16-bit register HL, data from the 8-bit A register.
+    The value of HL is decremented after the memory write.
+    """
+    opcode_hex = "0x32"
+    writer.writerow([opcode_hex, 1, "LD HL-, A M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
+    writer.writerow([opcode_hex, 2, "LD HL-, A M2", "HL", "REG_MEM", "REG_A", "NONE", "HL_DEC", 0, 1, 1])
+
+def generate_ld_a_hl_plus(writer):
+    """
+    Load to the 8-bit A register, data from the absolute address specified by the 16-bit register HL.
+    The value of HL is incremented after the memory read.
+    """
+    opcode_hex = "0x2A"
+    writer.writerow([opcode_hex, 1, "LD A, HL+ M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
+    writer.writerow([opcode_hex, 2, "LD A, HL+ M2", "HL", "REG_A", "REG_MEM", "NONE", "HL_INC", 1, 0, 1])
+
+
+def generate_ld_hlplus_a(writer):
+    """
+    Load to the absolute address specified by the 16-bit register HL, data from the 8-bit A register.
+    The value of HL is incremented after the memory write.
+    """
+    opcode_hex = "0x22"
+    writer.writerow([opcode_hex, 1, "LD HL+, A M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
+    writer.writerow([opcode_hex, 2, "LD HL+, A M2", "HL", "REG_MEM", "REG_A", "NONE", "HL_INC", 0, 1, 1])

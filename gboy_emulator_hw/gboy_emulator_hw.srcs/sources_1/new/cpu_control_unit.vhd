@@ -20,7 +20,7 @@ architecture rtl of cpu_control_unit is
     
     -- Execution State
     signal current_ir   : integer range 0 to 255 := 0;
-    signal m_cycle      : integer range 1 to 4 := 1;
+    signal m_cycle      : integer range 1 to 5 := 1;
     signal t_cycle      : integer range 1 to 4 := 1;
     signal phase_executed  : integer range 1 to 4 := 1;
 
@@ -31,44 +31,45 @@ architecture rtl of cpu_control_unit is
    signal internal_bus  : std_logic_vector(7 downto 0); 
    
     -- Internal Registers
-    signal reg_a, reg_b, reg_c, reg_d, reg_e, reg_h, reg_l: std_logic_vector(7 downto 0) := (others => '0');
-    signal temp_z, temp_w: std_logic_vector(7 downto 0) := (others => '0');
-    signal pc, sp: unsigned(15 downto 0) := (others => '0');
+    signal af, bc, de, hl, sp, pc, temp_wz: unsigned(15 downto 0) := (others => '0');
 
 begin
     -- 1. Index the ROM using current IR and M-Cycle
     mc <= MICROCODE_ROM(current_ir, m_cycle);
     
     -- 2. Address Bus Multiplexer
-    process(mc.addr_sel, pc, sp, reg_h, reg_l, reg_b, reg_c, reg_d, reg_e, temp_w, temp_z)
+    process(mc.addr_sel, bc, de, hl, sp, pc, temp_wz)
     begin
         case mc.addr_sel is
             when 0 => addr_bus <= std_logic_vector(pc);
-            when 1 => addr_bus <= reg_h & reg_l;
-            when 2 => addr_bus <= reg_b & reg_c;
-            when 3 => addr_bus <= reg_d & reg_e;
-            when 4 => addr_bus <= temp_w & temp_z;
-            when 5 => addr_bus <= x"FF" & reg_c;
-            when 6 => addr_bus <= x"FF" & temp_z;
+            when 1 => addr_bus <= std_logic_vector(hl);
+            when 2 => addr_bus <= std_logic_vector(bc);
+            when 3 => addr_bus <= std_logic_vector(de);
+            when 4 => addr_bus <= std_logic_vector(temp_wz);
+            when 5 => addr_bus <= x"FF" & std_logic_vector(bc(7 downto 0));
+            when 6 => addr_bus <= x"FF" & std_logic_vector(temp_wz(7 downto 0));
             when 7 => addr_bus <= std_logic_vector(sp);
             when others => addr_bus <= (others => '0');
         end case;    
     end process;
     
     -- 3. Internal Data Bus Mux
-    process(mc.reg_src, reg_a, reg_b, reg_c, reg_d, reg_e, reg_h, reg_l, temp_z, temp_w, mem_data_in)
+    process(mc.reg_src, af, bc, de, hl, temp_wz, sp, mem_data_in)
     begin
         case mc.reg_src is
-            when 0 => internal_bus <= reg_b;
-            when 1 => internal_bus <= reg_c;
-            when 2 => internal_bus <= reg_d;
-            when 3 => internal_bus <= reg_e;
-            when 4 => internal_bus <= reg_h;
-            when 5 => internal_bus <= reg_l;
-            when 7 => internal_bus <= reg_a;
-            when 8 => internal_bus <= mem_data_in;
-            when 9 => internal_bus <= temp_z;
-            when 10=> internal_bus <= temp_w;
+            when 0 => internal_bus <= std_logic_vector(bc(15 downto 8));
+            when 1 => internal_bus <= std_logic_vector(bc(7 downto 0));
+            when 2 => internal_bus <= std_logic_vector(de(15 downto 8));
+            when 3 => internal_bus <= std_logic_vector(de(7 downto 0));
+            when 4 => internal_bus <= std_logic_vector(hl(15 downto 8));
+            when 5 => internal_bus <= std_logic_vector(hl(7 downto 0));
+            when 7 => internal_bus <= std_logic_vector(af(15 downto 8));
+            when 8 => internal_bus <= std_logic_vector(af(7 downto 0));
+            when 9 => internal_bus <= mem_data_in;
+            when 10 => internal_bus <= std_logic_vector(temp_wz(7 downto 0));
+            when 11 => internal_bus <= std_logic_vector(temp_wz(15 downto 8));
+            when 12 => internal_bus <= std_logic_vector(sp(7 downto 0));
+            when 13 => internal_bus <= std_logic_vector(sp(15 downto 8));
             when others => internal_bus <= (others => '0');
         end case;
     end process;
@@ -87,19 +88,15 @@ begin
             phase_executed <= 1;
 
             pc <= (others => '0');
-            sp <= (others => '0');
 
-            temp_z <= (others => '0');
-            temp_w <= (others => '0');
+            temp_wz <= (others => '0');
 
             -- rst registers
-            reg_a <= x"01";
-            reg_b <= x"02";
-            reg_c <= x"03";
-            reg_d <= x"04";
-            reg_e <= x"05";
-            reg_h <= x"07";
-            reg_l <= x"08";
+            af <= x"0A01";
+            bc <= x"0203";
+            de <= x"0405";
+            hl <= x"0708";
+            sp <= x"FFFB";
 
         elsif rising_edge(clk) then
             phase_executed <= t_cycle;
@@ -119,16 +116,19 @@ begin
                 when 2 =>
                 -- Register writeback
                     case mc.reg_dest is
-                        when 0 => reg_b  <= internal_bus;
-                        when 1 => reg_c  <= internal_bus;
-                        when 2 => reg_d  <= internal_bus;
-                        when 3 => reg_e  <= internal_bus;
-                        when 4 => reg_h  <= internal_bus;
-                        when 5 => reg_l  <= internal_bus;
-                        when 7 => reg_a  <= internal_bus;
-                        when 8 => mem_data_out <= internal_bus;
-                        when 9 => temp_z <= internal_bus;
-                        when 10=> temp_w <= internal_bus;
+                        when 0 => bc(15 downto 8)  <= unsigned(internal_bus);
+                        when 1 => bc(7 downto 0)  <= unsigned(internal_bus);
+                        when 2 => de(15 downto 8)  <= unsigned(internal_bus);
+                        when 3 => de(7 downto 0)  <= unsigned(internal_bus);
+                        when 4 => hl(15 downto 8)  <= unsigned(internal_bus);
+                        when 5 => hl(7 downto 0)  <= unsigned(internal_bus);
+                        when 7 => af(15 downto 8)  <= unsigned(internal_bus);
+                        when 8 => af(7 downto 0) <= unsigned(internal_bus and x"F0");
+                        when 9 => mem_data_out <= internal_bus;
+                        when 10 => temp_wz(7 downto 0) <= unsigned(internal_bus);
+                        when 11 => temp_wz(15 downto 8) <= unsigned(internal_bus);
+                        when 12 => sp(7 downto 0) <= unsigned(internal_bus);
+                        when 13 => sp(15 downto 8) <= unsigned(internal_bus);
                         when others => null;
                     end case;
                     t_cycle <= 3;
@@ -139,6 +139,10 @@ begin
                         when 1 => pc <= pc + 1;
                         when 2 => sp <= sp + 1;
                         when 3 => sp <= sp - 1;
+                        when 4 => hl <= hl - 1;
+                        when 5 => hl <= hl + 1;
+                        when 6 => temp_wz <= temp_wz + 1;
+                        when 7 => sp <= hl;
                         when others => null;
                     end case;
                     t_cycle <= 4;

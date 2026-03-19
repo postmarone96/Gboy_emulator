@@ -4,13 +4,13 @@ from microcode_hdl_gen import csv_to_vhdl
 
 
 def main():
-    main()
-
-if __name__ == "__main__":
-    dest_dir = "../gboy_emulator_hw/gboy_emulator_hw.srcs/sources_1/new"
+    dest_dir = "../../gboy_emulator_hw/gboy_emulator_hw.srcs/sources_1/new"
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
 
     csv_gen('microcode.csv')
     csv_to_vhdl('microcode.csv',
-            os.path.join(dest_dir, 'microcode_pkg.vhd'))
+                os.path.join(dest_dir, 'microcode_pkg.vhd'))
+
+if __name__ == "__main__":
+    main()
