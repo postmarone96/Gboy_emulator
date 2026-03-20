@@ -8,7 +8,7 @@ def csv_to_vhdl(csv_file, vhdl_file):
                "TEMP_Z": 10, "TEMP_W": 11, "REG_P":12, "REG_S":13, "NONE": 15}
     addr_map = {"PC": 0, "HL": 1, "BC": 2, "DE": 3, "WZ": 4,
                 "FF00_C":5, "FF00_Z":6, "SP":7}
-    alu_map = {"NONE": 0, "ADD": 1, "SUB": 2}
+    alu_map = {"NONE": 0, "ADD": 1, "SUB": 2, "ADD_SP_E": 3}
     idu_map = {"NONE": 0, "PC_INC": 1, "SP_INC": 2, "SP_DEC": 3,
                "HL_DEC": 4, "HL_INC": 5, "WZ_INC": 6, "HL_TO_SP": 7}
     try:

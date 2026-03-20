@@ -3,8 +3,8 @@ SIM ?= ghdl
 TOPLEVEL_LANG ?= vhdl
 
 # Pfade zu deinen VHDL-Dateien (Passe diese an dein Projekt an!)
-VHDL_SOURCES += /home/marone/Documents/Gboy_emulator/gboy_emulator_hw/gboy_emulator_hw.srcs/sources_1/new/microcode_pkg.vhd
-VHDL_SOURCES += /home/marone/Documents/Gboy_emulator/gboy_emulator_hw/gboy_emulator_hw.srcs/sources_1/new/cpu_control_unit.vhd
+VHDL_SOURCES += ../../gboy_emulator_hw/gboy_emulator_hw.srcs/sources_1/new/microcode_pkg.vhd
+VHDL_SOURCES += ../../gboy_emulator_hw/gboy_emulator_hw.srcs/sources_1/new/cpu_control_unit.vhd
 
 # Name der Top-Level Entity in deinem VHDL
 TOPLEVEL = cpu_control_unit

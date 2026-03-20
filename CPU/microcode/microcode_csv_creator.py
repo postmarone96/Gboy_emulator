@@ -131,24 +131,28 @@ def csv_gen(path_to_csv_file):
 
         """16 Bit Load Instructions"""
         # # Done
-        # LD rr, nn: Load 16-bit register / register pair
-        generate_ld_rr_nn(writer, b16_registers)
+        # # LD rr, nn: Load 16-bit register / register pair
+        # generate_ld_rr_nn(writer, b16_registers)
+        #
+        # # # Done
+        # # Load to the absolute address specified by the 16-bit operand nn, data from the 16-bit SP register.
+        # generate_ld_nn_sp(writer)
+        #
+        # # # Done
+        # # LD SP, HL: Load stack pointer from HL
+        # generate_ld_sp_hl(writer)
+        #
+        # # # Done
+        # # PUSH rr: Push to stack
+        # generate_push_rr(writer, b16_registers_stack)
+        #
+        # # # Done
+        # # POP rr: Pop from stack
+        # generate_pop_rr(writer, b16_registers_stack)
 
-        # # Done
-        # Load to the absolute address specified by the 16-bit operand nn, data from the 16-bit SP register.
-        generate_ld_nn_sp(writer)
-
-        # # Done
-        # LD SP, HL: Load stack pointer from HL
-        generate_ld_sp_hl(writer)
-
-        # # Done
-        # PUSH rr: Push to stack
-        generate_push_rr(writer, b16_registers_stack)
-
-        # # Done
-        # POP rr: Pop from stack
-        generate_pop_rr(writer, b16_registers_stack)
+        # Done
+        # LD HL, SP+e: Load HL from adjusted stack pointer
+        generate_ld_sp_plus_e(writer)
 
 
 

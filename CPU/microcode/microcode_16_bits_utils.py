@@ -50,3 +50,9 @@ def generate_pop_rr(writer, registers):
         writer.writerow([opcode_hex, 1, f"POP {d_name} M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
         writer.writerow([opcode_hex, 2, f"POP {d_name} M2", "SP", f"REG_{d_name[1].upper()}", "REG_MEM", "NONE", "SP_INC", 1, 0, 0])
         writer.writerow([opcode_hex, 3, f"POP {d_name} M3", "SP", f"REG_{d_name[0].upper()}", "REG_MEM", "NONE", "SP_INC", 1, 0, 1])
+
+def generate_ld_sp_plus_e(writer):
+    opcode_hex = "0xF8"
+    writer.writerow([opcode_hex, 1, "LD HL, SP+e M1", "PC", "NONE", "NONE", "NONE", "PC_INC", 1, 0, 0])
+    writer.writerow([opcode_hex, 2, "LD HL, SP+e M2", "PC", "TEMP_Z", "REG_MEM", "NONE", "PC_INC", 1, 0, 0])
+    writer.writerow([opcode_hex, 3, "LD HL, SP+e M3", "NONE", "NONE", "NONE", "ADD_SP_E", "NONE", 0, 0, 1])

@@ -28,7 +28,7 @@ architecture rtl of cpu_control_unit is
     signal mc           : microcode_row;
     
     -- Internal Data Bus
-   signal internal_bus  : std_logic_vector(7 downto 0); 
+    signal internal_bus  : std_logic_vector(7 downto 0);
    
     -- Internal Registers
     signal af, bc, de, hl, sp, pc, temp_wz: unsigned(15 downto 0) := (others => '0');
@@ -76,6 +76,9 @@ begin
 
     -- 4. Rising edge
     process(clk, rst)
+    -- Variable decalaration
+    variable operand_e : signed(7 downto 0);
+    variable p, z      : unsigned(7 downto 0);
     begin
         if rst = '1' then
             current_ir <= 0;
@@ -92,7 +95,7 @@ begin
             temp_wz <= (others => '0');
 
             -- rst registers
-            af <= x"0A01";
+            af <= x"0A00";
             bc <= x"0203";
             de <= x"0405";
             hl <= x"0708";
@@ -143,6 +146,34 @@ begin
                         when 5 => hl <= hl + 1;
                         when 6 => temp_wz <= temp_wz + 1;
                         when 7 => sp <= hl;
+                        when others => null;
+                    end case;
+
+                    -- ALU operations
+                    case mc.alu_op is
+                        when 3 =>
+                            operand_e   := signed(temp_wz(7 downto 0));
+                            p           := sp(7 downto 0);
+                            z           := unsigned(temp_wz(7 downto 0));
+                            hl          <= sp + unsigned(resize(operand_e, 16));
+
+                            -- Flags (Z=0, N=0)
+                            af(7) <= '0';
+                            af(6) <= '0';
+
+                            -- Half Carry (Bit 3 -> 4)
+                            if ( ("0" & p(3 downto 0)) + ("0" & z(3 downto 0)) > 15 ) then
+                                af(5) <= '1';
+                            else
+                                af(5) <= '0';
+                            end if;
+
+                            -- Carry (Bit 7 -> 8)
+                            if ( (unsigned("0" & p) + unsigned("0" & z)) > 255 ) then
+                                af(4) <= '1';
+                            else
+                                af(4) <= '0';
+                            end if;
                         when others => null;
                     end case;
                     t_cycle <= 4;
