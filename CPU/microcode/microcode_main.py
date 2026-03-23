@@ -8,8 +8,8 @@ def main():
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
 
-    csv_gen('microcode.csv')
-    csv_to_vhdl('microcode.csv',
+    csv_gen('microcode.csv', 'cb_microcode.csv')
+    csv_to_vhdl('microcode.csv', 'cb_microcode.csv',
                 os.path.join(dest_dir, 'microcode_pkg.vhd'))
 
 if __name__ == "__main__":

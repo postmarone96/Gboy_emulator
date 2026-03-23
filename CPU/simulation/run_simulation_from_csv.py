@@ -1,69 +1,107 @@
-import csv
+import argparse
 import os
-import subprocess
 import shutil
-
-if os.path.exists("sim_build"):
-    shutil.rmtree("sim_build")
-
-if os.path.exists("results/logs"):
-    shutil.rmtree("results/logs")
-
-if os.path.exists("results/waveforms"):
-    shutil.rmtree("results/waveforms")
-
-os.makedirs("results/waveforms", exist_ok=True)
-os.makedirs("results/logs", exist_ok=True)
+import subprocess
+import sys
+from pathlib import Path
 
 
-def run_single_opcode_sim(opcode_hex, label):
-    # Dateiname für die Waveform säubern
-    clean_label = label.replace(" ", "_").replace(",", "").replace("(", "").replace(")", "").replace("/", "_")
-    clean_label = clean_label[:-3]
-    wave_path = os.path.abspath(f"results/waveforms/{opcode_hex}_{clean_label}.ghw")
-    log_path = os.path.abspath(f"results/logs/{opcode_hex}.log")
+ROOT = Path(__file__).resolve().parent
+DEFAULT_ROM_DIR = ROOT / "gb-test-roms-master" / "cpu_instrs" / "individual"
+RESULTS_DIR = ROOT / "results"
+WAVE_DIR = RESULTS_DIR / "waveforms"
+LOG_DIR = RESULTS_DIR / "logs"
 
-    print(f"-> Simuliere Opcode {opcode_hex} ({label[:-3]})...", end=" ", flush=True)
 
-    # Environment variables for Makefile and test_cpu.py
+def clean_output_dirs() -> None:
+    shutil.rmtree(ROOT / "sim_build", ignore_errors=True)
+    shutil.rmtree(WAVE_DIR, ignore_errors=True)
+    shutil.rmtree(LOG_DIR, ignore_errors=True)
+    WAVE_DIR.mkdir(parents=True, exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def sanitize_name(name: str) -> str:
+    cleaned = name.replace(" ", "_").replace(",", "").replace("(", "").replace(")", "")
+    return cleaned.replace("/", "_")
+
+
+def collect_roms(target: Path) -> list[Path]:
+    if target.is_file():
+        return [target]
+    if target.is_dir():
+        return sorted(target.glob("*.gb"))
+    raise FileNotFoundError(f"ROM path not found: {target}")
+
+
+def run_single_rom(rom_path: Path, timeout_seconds: int) -> bool:
+    rom_name = sanitize_name(rom_path.stem)
+    wave_path = WAVE_DIR / f"{rom_name}.ghw"
+    log_path = LOG_DIR / f"{rom_name}.log"
+
+    print(f"-> Simulating {rom_path.name}...", end=" ", flush=True)
+
     env = os.environ.copy()
+    env.setdefault("TRACE_OPCODES", "0")
     env["PYTHONUNBUFFERED"] = "1"
-    env["TEST_OPCODE"] = opcode_hex
-    env["WAVE_FILE"] = wave_path
+    env["TEST_ROM"] = str(rom_path.resolve())
+    env["WAVE_FILE"] = str(wave_path.resolve())
+    env.setdefault("MODULE", "blargg_test")
 
-    # run Makefile
     try:
-        with open(log_path, "w") as f:
+        with log_path.open("w") as log_file:
             result = subprocess.run(
                 ["make", "sim"],
+                cwd=ROOT,
                 env=env,
-                stdout=f,
-                stderr=f,
-                timeout=30  # Falls die Simulation in einem Loop hängen bleibt
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                timeout=timeout_seconds,
             )
-
-        if result.returncode == 0:
-            print("OK")
-        else:
-            print("ERROR (Check logs/)")
     except subprocess.TimeoutExpired:
         print("TIMEOUT")
+        return False
+
+    if result.returncode == 0:
+        print("OK")
+        return True
+
+    print("ERROR")
+    return False
 
 
-# 2. read csv and start simulation
-def start_suite(csv_file):
-    processed_opcodes = set()
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Run Blargg Game Boy CPU ROMs through cocotb.")
+    parser.add_argument(
+        "target",
+        nargs="?",
+        default=str(DEFAULT_ROM_DIR),
+        help="Path to a single .gb ROM or a directory containing .gb files",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=600,
+        help="Per-ROM timeout in seconds",
+    )
+    args = parser.parse_args()
 
-    with open(csv_file, 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            op = row['Opcode']
-            if op not in processed_opcodes:
-                run_single_opcode_sim(op, row['Label'])
-                processed_opcodes.add(op)
+    target = Path(args.target).resolve()
+    roms = collect_roms(target)
+    if not roms:
+        print(f"No ROMs found in {target}")
+        return 1
+
+    clean_output_dirs()
+
+    failures = 0
+    for rom_path in roms:
+        if not run_single_rom(rom_path, args.timeout):
+            failures += 1
+
+    print(f"\nDone. {len(roms) - failures}/{len(roms)} ROMs passed.")
+    return 0 if failures == 0 else 1
 
 
 if __name__ == "__main__":
-    print("=== SM83 Opcode Simulation Runner ===")
-    start_suite('../microcode/microcode.csv')
-    print("\nDone! Alle Waves under 'results/waveforms/'")
+    sys.exit(main())
