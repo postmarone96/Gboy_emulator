@@ -68,6 +68,8 @@ architecture rtl of cpu_control_unit is
     signal dbg_mc_alu_op    : integer range 0 to 35 := 0;
     signal dbg_mc_idu_op    : integer range 0 to 19 := 0;
 
+    signal addr_bus_raw     : std_logic_vector(15 downto 0);
+    signal mem_addr_hold    : std_logic_vector(15 downto 0) := (others => '0');
     signal internal_bus     : std_logic_vector(7 downto 0);
     signal internal_bus_16  : unsigned(15 downto 0);
 
@@ -94,15 +96,15 @@ begin
     process(mc.addr_sel, bc, de, hl, sp, pc, temp_wz)
     begin
         case mc.addr_sel is
-            when 0 => addr_bus <= std_logic_vector(pc);
-            when 1 => addr_bus <= std_logic_vector(hl);
-            when 2 => addr_bus <= std_logic_vector(bc);
-            when 3 => addr_bus <= std_logic_vector(de);
-            when 4 => addr_bus <= std_logic_vector(temp_wz);
-            when 5 => addr_bus <= x"FF" & std_logic_vector(bc(7 downto 0));
-            when 6 => addr_bus <= x"FF" & std_logic_vector(temp_wz(7 downto 0));
-            when 7 => addr_bus <= std_logic_vector(sp);
-            when others => addr_bus <= (others => '0');
+            when 0 => addr_bus_raw <= std_logic_vector(pc);
+            when 1 => addr_bus_raw <= std_logic_vector(hl);
+            when 2 => addr_bus_raw <= std_logic_vector(bc);
+            when 3 => addr_bus_raw <= std_logic_vector(de);
+            when 4 => addr_bus_raw <= std_logic_vector(temp_wz);
+            when 5 => addr_bus_raw <= x"FF" & std_logic_vector(bc(7 downto 0));
+            when 6 => addr_bus_raw <= x"FF" & std_logic_vector(temp_wz(7 downto 0));
+            when 7 => addr_bus_raw <= std_logic_vector(sp);
+            when others => addr_bus_raw <= (others => '0');
         end case;    
     end process;
     
@@ -137,6 +139,8 @@ begin
             end case;
         end if;
     end process;
+
+    addr_bus <= mem_addr_hold when (t_cycle = 3 or t_cycle = 4) else addr_bus_raw;
     
     -- 3.1 16 Bits Internal Data Bus Mux
     process(mc.reg_src, bc, de, hl, sp, af)
@@ -150,6 +154,7 @@ begin
             when others  => internal_bus_16 <= (others => '0');
         end case;
     end process;
+
 
     -- 4. Rising edge
     process(clk, rst)
@@ -175,6 +180,8 @@ begin
             phase_executed <= 1;
 
             mem_data_out <= x"00";
+            mem_addr_hold <= (others => '0');
+
             temp_wz <= x"0000";
             sp_low_buffer <= (others => '0');
 
@@ -238,6 +245,7 @@ begin
                         t_cycle <= 2;
 
                     when 2 =>
+                    mem_addr_hold <= addr_bus_raw;
                     -- Register writeback
                         case mc.reg_dest is
                             when 0  => bc(15 downto 8)      <= unsigned(internal_bus);

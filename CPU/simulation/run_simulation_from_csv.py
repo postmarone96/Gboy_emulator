@@ -34,7 +34,7 @@ def collect_roms(target: Path) -> list[Path]:
     raise FileNotFoundError(f"ROM path not found: {target}")
 
 
-def run_single_rom(rom_path: Path, timeout_seconds: int) -> bool:
+def run_single_rom(rom_path: Path, timeout_seconds: int, waves: bool) -> bool:
     rom_name = sanitize_name(rom_path.stem)
     wave_path = WAVE_DIR / f"{rom_name}.ghw"
     log_path = LOG_DIR / f"{rom_name}.log"
@@ -46,6 +46,7 @@ def run_single_rom(rom_path: Path, timeout_seconds: int) -> bool:
     env["PYTHONUNBUFFERED"] = "1"
     env["TEST_ROM"] = str(rom_path.resolve())
     env["WAVE_FILE"] = str(wave_path.resolve())
+    env["WAVES"] = "1" if waves else "0"
     env.setdefault("MODULE", "blargg_test")
 
     try:
@@ -81,12 +82,19 @@ def main() -> int:
     parser.add_argument(
         "--timeout",
         type=int,
-        default=600,
+        default=2000,
         help="Per-ROM timeout in seconds",
     )
+    parser.add_argument(
+        "--waves",
+        action = "store_true",
+        help = "Enable GHDL waveform dumping",
+        )
     args = parser.parse_args()
 
-    target = Path(args.target).resolve()
+    # target = Path(args.target).resolve()
+    target = "/Users/marouanehajri/PycharmProjects/Gboy_emulator/CPU/simulation/gb-test-roms-master/cpu_instrs/individual/11-op a,(hl).gb"
+    target = Path(target)
     roms = collect_roms(target)
     if not roms:
         print(f"No ROMs found in {target}")
@@ -96,7 +104,7 @@ def main() -> int:
 
     failures = 0
     for rom_path in roms:
-        if not run_single_rom(rom_path, args.timeout):
+        if not run_single_rom(rom_path, args.timeout, args.waves):
             failures += 1
 
     print(f"\nDone. {len(roms) - failures}/{len(roms)} ROMs passed.")

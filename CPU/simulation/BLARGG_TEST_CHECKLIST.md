@@ -75,10 +75,10 @@ Baseline needed for most of these:
   - Needs only the baseline shell
   - Covers `LDH`, stack ops, immediate 16-bit loads, memory mapped FFxx access
 
-- [ ] `cpu_instrs/individual/09-op r,r.gb`
+- [x] `cpu_instrs/individual/09-op r,r.gb`
   - Needs only the baseline shell
 
-- [ ] `cpu_instrs/individual/10-bit ops.gb`
+- [x] `cpu_instrs/individual/10-bit ops.gb`
   - Needs only the baseline shell
 
 - [ ] `cpu_instrs/individual/11-op a,(hl).gb`

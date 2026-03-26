@@ -16,6 +16,7 @@ MODULE ?= blargg_test
 # --- Waveform Handling ---
 # Falls von run_all.py nichts kommt, nutzen wir einen Standardnamen
 WAVE_FILE ?= dump.ghw
+WAVES ?= 0
 TEST_ROM ?=
 BLARGG_TIMEOUT_CYCLES ?= 60000000
 COCOTB_PYTHON := $(abspath ../../.venv/bin/python3)
@@ -25,11 +26,14 @@ export PATH := $(abspath ../../.venv/bin):$(PATH)
 
 # GHDL-spezifische Argumente:
 # --wave=... schreibt die GHW Datei für Surfer
+ifeq ($(WAVES),1)
 SIM_ARGS += --wave=$(WAVE_FILE)
+endif
 SIM_ARGS += -gSIM_POST_BOOT=true
 
 export TEST_ROM
 export BLARGG_TIMEOUT_CYCLES
+export WAVES
 
 # --- Cocotb Makefile Einbindung ---
 include $(shell $(COCOTB_CONFIG) --makefiles)/Makefile.sim
